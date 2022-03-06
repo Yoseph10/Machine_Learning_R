@@ -13,7 +13,133 @@ knitr::opts_chunk$set(echo = TRUE)
 #loading libraries
 library(ISLR2)
 library(glmnet)
+library(MASS)
+library(boot)
 ```
+
+
+###Bootstrap: 
+
+1) Para una muestra de tamaño 5 (n=5), ¿Cual es la probabilidad que la j-enesima observacion se encuentre dentro de la muestra bootstrap?
+
+Si primero vemos la probabibilidad de que la observación seleccionada para el bootstrap *no* sea la j-enésima observación de la data original, tenemos lo siguiente: 
+
+$$1-(1/n)$$
+
+Esto es porque tenemos n observaciones por escoger de la data original y todas tienen igual de probabilidad de ser seleccionadas, por lo que su complemento (probabilidad de ser seleccionado) también sería igual.
+Por otro lado, en bootstrap sabemos que se hace una toma de muestra *con reposición*, por lo que cada muestra es independiente respecto a la otra, entonces, la probabilidad de que ninguna de las observaciones tomadas para la muestra sean la j-enésima observación del dataset, será la multiplicación de probabilidades, lo que nos da el siguiente resultante:
+
+$$(1-1/n)^n$$
+
+En este caso, nos están pidiendo encontrar la probabilidad de que la j-enésima observación *se encuentre* dentro de la muestra bootstrap, entonces podemos tomar el complemento de la formula mencionada previamente: 
+
+$$1 - (1-1/n)^n$$
+
+Sabemos que n = 5, entonces nos quedaríamos con:
+
+$$1 - (1-1/5)^5 = 0.672$$
+
+Entonces, podemos concluir que la probabilidad de que la j-enésima observación se encuentre en una muestra bootstrap de n = 5 es aproximadamente 0.672.
+
+
+2) Genere un plot que muestre en el eje X el tamaño de muestra (n) desde 1 a 100000 y en el eje Y la probabilidad que la j-enésima observación se encuentre dentro de la muestra bootstrap. Comente los resultados.
+
+
+3) Ahora consideraremos el conjunto de datos de vivienda de Boston, del ISLR2 library.
+
+a) Con base en este conjunto de datos, proporcione una estimación de la media de la variable medv. Nombre a esta estimación u.
+
+```{r}
+#a)
+u = mean(Boston$medv)
+u
+```
+
+La media de la variable *medv* es 22.53 aproximadamente. 
+En el contexto del problema, esto significa que la mediana promedio del valor de los hogares ocupados es 22.53 mil dólares.
+
+b) Proporcione una estimación del error estándar de u.
+
+```{r}
+#b)
+se_mu = sd(Boston$medv) / sqrt(nrow(Boston))
+se_mu
+```
+
+El error estándar estimado para la variable *medv* es 0.41 aproximadamente.
+
+c) Ahora estime el error estándar de u, usando bootstrap.
+
+```{r}
+#c)
+set.seed(100)
+fun_se = function(data, index) {
+    u = mean(data[index])
+    return (u)
+}
+boot(Boston$medv, fun_se, 1000)
+```
+
+Podemos ver que el resultado de estimar el error estándar de mu, usando bootstrap (0.419) es similar a lo hallado en la pregunta 3b (0.409).
+
+d) Con base en su estimación en (c) , proporcione un intervalo de confianza al 95 % de la media de medv utilizando bootstrap. Compárelo con los resultados obtenidos usando t.test(Boston$medv).
+
+```{r}
+#d)
+
+#Hallamos el intervalo de confianza con los resultados obtenidos en la parte c:
+
+intervalo_u = c(22.53 - 2 * 0.4192063 , 22.53 + 2 * 0.4192063)
+intervalo_u
+```
+
+```{r}
+#Obtenemos los resultados con t.test
+
+t.test(Boston$medv)
+```
+
+Vemos que el intervalo obtenido por bootstrap [21.61 ; 23.37] es bastante similar al resultante de la función t.test [21.73 ; 23.34]
+
+e) Con base en este conjunto de datos, proporcione una estimación, u_med, para la mediana de la variable medv.
+
+```{r}
+u_med = median(Boston$medv)
+u_med
+```
+
+La mediana estimada para la variable *medv* es 21.2 (en miles de dólares).
+
+f) Estime el error estándar de u_med utilizando bootstrap. Comente sus hallazgos.
+
+```{r}
+set.seed(20)
+fun_se <- function(data, index) {
+    u <- median(data[index])
+    return (u)
+}
+boot(Boston$medv, fun_se, 1000)
+```
+
+En este caso usamos bootstrap para obtener el error estándar de la mediana, y vemos que este es 0.38 aproximadamente, lo cual viene a ser un valor pequeño a comparación del valor de la mediana estimado (21.2, igual a lo obtenido en la parte e).
+
+###Cross Validation:
+
+1) Explique cómo se implementa el k-fold cross validation.  
+
+Para hacer k-fold cross validation, debemos dividir nuestro dataset en k grupos de igual tamaño; Estos grupos no pueden tener la misma observación entre ellos.
+De estos k grupos, escogeremos todos menos uno (k-1) como set de entrenamiento, y el restante será set de test. 
+Vamos a iterar k veces para obtener el modelo $M1, M2, ...Mk$, donde cada modelo $Mj$ se obtendrá usando todas las observaciones menos las del grupo $j$, ya que este grupo es el de validación.
+Con dicho test de validación, podemos obtener el score de accuracy, que puede ser el error cuadrático medio en caso el modelo sea un modelo de predicción, o una porporción de observaciones clasificadas correctamente, en caso hablemos de un modelo de clasificación. 
+Luego de obtener el score para cada modelo, se toma el promedio de los resultados para obtener el score de accuracy final.
+
+2) Comente las ventajas y desventajas de k-fold cross validation con respecto a validation set approach y LOOCV.
+
+ - Comparación contra *validation set approach*: 
+ La ventaja de k-fold contra este método es que dado a que se estiman varios modelos y son sus resultados los que se promedian, la variabilidad del score de accuracy es mucho menor que el que se obtiene por el validation set approach, ya que este último depende de que observaciones entran al set de entrenamiento y cuales van al set de vaildación.
+ Dicho esto, la desventaja de K-folds es por temas computacionales, como debe iterar tantos modelos como k folios hayan, esto puede hacer el proceso más pesado. 
+ - Comparación contra *LOOCV*: 
+ Una ventaja contra LOOCV es por temas computaciones, debido a que normalmente k-fold usualmente requiere menos grupos, LOOCV requiere k = n, donde n es el número de observaciones en el dataset. Dado al número de modelos a ajustar, el estimado del score de accuracy llega a ser más insesgado que el obtenido por k-folds, sin embargo, los resultados del score de cada modelo obtenido por LOOCV son altamente correlacionados, ya que usan practicamente los mismos datos (n-1 observaciones del dataset), esto termina aumentando la variabilidad del score contra la variabilidad que se obtiene con k-folds, lo que finalmente hace el resultado del score de k-folds mas certero.
 
 
 ### Lasso and Ridge
