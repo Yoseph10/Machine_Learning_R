@@ -1,0 +1,97 @@
+---
+title: "Pregunta 2 y 3"
+author: "Claudia Villena"
+date: "7/3/2022"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Pregunta 2: 
+
+1)	Supongamos que estimamos los betas en el siguiente modelo de regresión linea: 
+
+![](C:/Users/Claudia/Desktop/tarea1.png)
+
+Determine cuál de las siguientes proposiciones es verdadera. Justifique su respuesta. 
+
+### a)	A medida que aumentamos s desde 0, el RSS de la data de entrenamiento:
+
+1) Aumenta inicialmente y luego eventualmente comienza a disminuir en forma de U invertida. 
+
+2) Disminuye inicialmente y luego eventualmente comienza a aumentar en forma de U. 
+
+3) Aumenta constantemente. 
+
+_4) Disminuye constantemente._
+
+5) Permanece constante. 
+
+#### Respuesta: 
+
+A medida que s aumenta, los estimadores de coeficientes tendrán que ser menores e iguales que este, por tanto, igual de grandes. Esto genera que la restricción sobre los betas disminuya. De esta forma, podría presentarse la solución de los mínimos cuadrados (la función que mejor se aproxime a los datos) y, por tanto, el RSS de la data entrenamiento será más baja. 
+Además, al observar el RSS de nuestra data de entrenamiento, se espera que esta vaya reduciendo conforme se vaya entrenando con ella. Una disminución continua. 
+
+### b) b)	A medida que aumentamos s desde 0, el RSS de la data de test: 
+
+1) Aumenta inicialmente y luego eventualmente comienza a disminuir en forma de U invertida. 
+
+_2) Disminuye inicialmente y luego eventualmente comienza a aumentar en forma de U._ 
+
+3) Aumenta constantemente.
+
+4) Disminuye constantemente. 
+
+5) Permanece constante.
+
+#### Respuesta: 
+
+En el caso del RSS en la data de prueba, se espera que este error disminuya para luego aumentar en forma de U. Esto se debe a que en cuanto aumente más el s, lleva a que los estimadores de coeficientes también aumenten. Como se comentó previamente, llegará el punto en el que se presente la solución de los mínimos cuadrados, llegando a reducirse el RSS; después aumenta progresivamente en tanto los valores de beta se ajustan a la data de entrenamiento y se genera un evento de overfiting en la data de test. 
+
+## Pregunta 3:
+
+Supongamos que estimamos los betas en el siguiente modelo de regresión lineal:
+
+![](C:/Users/Claudia/Desktop/tarea2.png)
+
+### a)	A medida que aumentamos λ desde 0, el RSS de la data de entrenamiento:
+
+1) Aumenta inicialmente y luego eventualmente comienza a disminuir en forma de U invertida. 
+
+2) Disminuye inicialmente y luego eventualmente comienza a aumentar en forma de U. 
+
+_3) Aumenta constantemente._ 
+
+4) Disminuye constantemente. 
+
+5) Permanece constante. 
+
+#### Respuesta: 
+
+![](C:/Users/Claudia/Desktop/tarea2.1.png)
+
+Este segundo término de la función es el shrinkage penalty. Por tanto, cuando λ es 0 la penalidad carece de efecto, permitiendo que la regresión produzca las estimaciones de mínimos cuadrados. En este ejercicio, conforme se aumenta λ el efecto de la penalidad aumenta y la restricción de beta también lo hace, acercándonos a valores de B menores. Por ello, cuando λ aumenta, el RSS en el grupo de entrenamiento aumentará constantemente. 
+
+### b)	A medida que aumentamos λ desde 0, el RSS de la data de test: 
+
+1) Aumenta inicialmente y luego eventualmente comienza a disminuir en forma de U invertida. 
+
+_2) Disminuye inicialmente y luego eventualmente comienza a aumentar en forma de U._
+
+3) Aumenta constantemente. 
+
+4) Disminuye constantemente. 
+
+5) Permanece constante.
+
+#### Respuesta: 
+En este caso, la segunda parte de la fórmula controla la complejidad/flexibilidad del modelo con el objetivo de reducir el error de generalización y evitar overfiting. Cuando lambda es reducido se optimiza al OLS normal con un RSS reducido, conforme nos acercamos al mejor valor de entrenamiento. 
+Conforme lambda aumenta se pierde flexibilidad del modelo, reduciendo la varianza en las predicciones y aumentando el sesgo. Cuando aumenta la capacidad de predicción del modelo disminuye el RSS de la data de test. No obstante, se llega a un punto en el que aumenta más el sesgo que lo que se reduce la varianza del modelo, produciendo un mayor sesgo. Esto genera un aumento en el RSS de la data de test. 
+
+
