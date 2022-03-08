@@ -393,7 +393,7 @@ bestlam &lt;- cv.out$lambda.min
 
 lasso.pred &lt;- predict(lasso.mod, s = bestlam, newx = x[test, ])
 
-MSE_lasso &lt;- mean((lasso.pred - y.test)^2) #1260855 MSE
+MSE_lasso &lt;- mean((lasso.pred - y.test)^2) #1234664 MSE
 MSE_lasso</code></pre>
 <pre><code>## [1] 1234664</code></pre>
 <pre class="r"><code>#el número de estimaciones de coeficiente distintas de cero
@@ -418,12 +418,14 @@ lasso.coef[lasso.coef!=0]</code></pre>
 ## 1 1266407   1125215   1234664</code></pre>
 <p><strong>5) Ahora intentaremos predecir la tasa de criminalidad per cápita en los datos de Boston, del ISLR2 library.</strong></p>
 <p><strong>a) Proponga un modelo (o conjunto de modelos) que performen bien en este conjunto de datos y justifique su respuesta. Asegúrese de que estos modelos evaluen el rendimiento del modelo utilizando cross validation, en lugar de utilizar el error de entrenamiento.</strong></p>
+<p>Inicialmente, proponemos dos modelos: una regresión lasso y una regresión ridge.</p>
 <pre class="r"><code>#predict per capita crime rate
 attach(Boston)
 
 sum(is.na(Boston))</code></pre>
 <pre><code>## [1] 0</code></pre>
 <pre class="r"><code>set.seed(1)</code></pre>
+<p><strong>Lasso</strong></p>
 <pre class="r"><code>#lasso
 #create grid of values ranging from 10^10 to 10^-2
 grid &lt;- 10^seq(10, -2, length=100)
@@ -447,19 +449,20 @@ bestlam &lt;- cv.out$lambda.min
 
 lasso.pred &lt;- predict(lasso.mod, s = bestlam, newx = x_lasso[test, ])
 
-mean((lasso.pred - y.test)^2) #=41.0081</code></pre>
+mean((lasso.pred - y.test)^2) #=40.89875</code></pre>
 <pre><code>## [1] 40.89875</code></pre>
 <pre class="r"><code>out &lt;- glmnet(x_lasso, y_lasso, alpha = 1, lambda = grid)
 
 lasso.coef &lt;- predict(out, type=&quot;coefficients&quot;, s = bestlam)[1:13,]
-lasso.coef #non-zero variables: zn, indus, chas, nox, rm, dis, rad, tax, ptratio, lstat, medv</code></pre>
+lasso.coef #non-zero variables: zn, indus, chas, nox, rm, dis, rad, ptratio, lstat, medv</code></pre>
 <pre><code>##  (Intercept)           zn        indus         chas          nox           rm 
 ## 11.548254668  0.034622094 -0.063614952 -0.558766844 -5.887086047  0.162261311 
 ##          age          dis          rad          tax      ptratio        black 
 ##  0.000000000 -0.724700687  0.507628586  0.000000000 -0.160962515 -0.007549463 
 ##        lstat 
 ##  0.122386039</code></pre>
-<pre class="r"><code>           #zero variable: age</code></pre>
+<pre class="r"><code>           #zero variable: age, tax</code></pre>
+<p><strong>Ridge</strong></p>
 <pre class="r"><code>#ridge regression
 
 #put data in correct format
@@ -480,7 +483,7 @@ cv.out &lt;- cv.glmnet(x_ridge[train, ], y_ridge[train], alpha = 0)
 bestlam &lt;- cv.out$lambda.min
 
 ridge.pred &lt;- predict(ridge.mod, s = bestlam, newx = x_ridge[test, ])
-mean((ridge.pred - y.test)^2) #=54.77138 (worse than lasso)</code></pre>
+mean((ridge.pred - y.test)^2) #=58.32772 (worse than lasso)</code></pre>
 <pre><code>## [1] 58.32772</code></pre>
 <pre class="r"><code>out &lt;- glmnet(x_ridge, y_ridge, alpha = 0, lambda = grid)
 ridge.coef &lt;- predict(out, type=&quot;coefficients&quot;, s = bestlam)[1:13,]
@@ -491,8 +494,9 @@ ridge.coef </code></pre>
 ##  0.001735418 -0.722712503  0.432692398  0.003047482 -0.146146915 -0.008419594 
 ##        lstat 
 ##  0.142451143</code></pre>
+<p>Dado que el modelo que nos da un menor error de predicción es lasso, nos quedamos con este.</p>
 <p><strong>b) ¿El modelo elegido involucra todas las variables disponibles? Justifique.</strong></p>
-<p>El mejor modelo es lasso, ya que, a diferencia de ridge, este tiene un error de predicción menor (41 vs 55). El modelo lasso propuesto no incluye a todas las variables. De hecho, solo excluye a 1 de estas, la cual es edad.</p>
+<p>El mejor modelo es lasso, ya que, a diferencia de ridge, este tiene un error de predicción menor (41 vs 58). El modelo lasso propuesto no incluye a todas las variables. De hecho, excluye a 2 de estas: age y tax. Esto debido a que, dado el parámetro de regularización del modelo, lasso tiende a excluir variables del modelo, ya que les otorga un coefiente de cero. Para este caso en particular, solo se están excluyendo las dos variables anteriomente mencionadas.</p>
 </div>
 
 

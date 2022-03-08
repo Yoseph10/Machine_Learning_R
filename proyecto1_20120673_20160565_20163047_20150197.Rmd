@@ -295,7 +295,7 @@ bestlam <- cv.out$lambda.min
 
 lasso.pred <- predict(lasso.mod, s = bestlam, newx = x[test, ])
 
-MSE_lasso <- mean((lasso.pred - y.test)^2) #1260855 MSE
+MSE_lasso <- mean((lasso.pred - y.test)^2) #1234664 MSE
 MSE_lasso
 ```
 
@@ -328,6 +328,8 @@ data.frame(MSE_ols, MSE_ridge, MSE_lasso)
 
 **a) Proponga un modelo (o conjunto de modelos) que performen bien en este conjunto de datos y justifique su respuesta. Asegúrese de que estos modelos evaluen el rendimiento del modelo utilizando cross validation, en lugar de utilizar el error de entrenamiento.**
 
+Inicialmente, proponemos dos modelos: una regresión lasso y una regresión ridge. 
+
 ```{r}
 #predict per capita crime rate
 attach(Boston)
@@ -339,6 +341,7 @@ set.seed(1)
 
 ```
 
+**Lasso**
 
 ```{r}
 #lasso
@@ -364,18 +367,19 @@ bestlam <- cv.out$lambda.min
 
 lasso.pred <- predict(lasso.mod, s = bestlam, newx = x_lasso[test, ])
 
-mean((lasso.pred - y.test)^2) #=41.0081
+mean((lasso.pred - y.test)^2) #=40.89875
 
 
 out <- glmnet(x_lasso, y_lasso, alpha = 1, lambda = grid)
 
 lasso.coef <- predict(out, type="coefficients", s = bestlam)[1:13,]
-lasso.coef #non-zero variables: zn, indus, chas, nox, rm, dis, rad, tax, ptratio, lstat, medv
+lasso.coef #non-zero variables: zn, indus, chas, nox, rm, dis, rad, ptratio, lstat, medv
 
-           #zero variable: age
+           #zero variable: age, tax
 
 ```
 
+**Ridge**
 
 ```{r}
 #ridge regression
@@ -398,19 +402,17 @@ cv.out <- cv.glmnet(x_ridge[train, ], y_ridge[train], alpha = 0)
 bestlam <- cv.out$lambda.min
 
 ridge.pred <- predict(ridge.mod, s = bestlam, newx = x_ridge[test, ])
-mean((ridge.pred - y.test)^2) #=54.77138 (worse than lasso)
+mean((ridge.pred - y.test)^2) #=58.32772 (worse than lasso)
 
 out <- glmnet(x_ridge, y_ridge, alpha = 0, lambda = grid)
 ridge.coef <- predict(out, type="coefficients", s = bestlam)[1:13,]
 ridge.coef 
 ```
 
+Dado que el modelo que nos da un menor error de predicción es lasso, nos quedamos con este. 
 
 **b) ¿El modelo elegido involucra todas las variables disponibles? Justifique.**
 
-El mejor modelo es lasso, ya que, a diferencia de ridge, este tiene un error de predicción menor (41 vs 55). El modelo lasso propuesto no incluye a todas las variables. De hecho, solo excluye a 1 de estas, la cual es edad.
-
-
-
+El mejor modelo es lasso, ya que, a diferencia de ridge, este tiene un error de predicción menor (41 vs 58). El modelo lasso propuesto no incluye a todas las variables. De hecho, excluye a 2 de estas: age y tax. Esto debido a que, dado el parámetro de regularización del modelo, lasso tiende a excluir variables del modelo, ya que les otorga un coefiente de cero. Para este caso en particular, solo se están excluyendo las dos variables anteriomente mencionadas.
 
 
