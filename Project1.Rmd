@@ -19,7 +19,7 @@ library(glmnet)
 ### Lasso and Ridge
 
 
-4) Predict the number of applications received using the variables in the university dataset
+4) Predecir el número de solicitudes recibidas usando las variables en el conjunto de datos de College
 
 a)
 
@@ -28,7 +28,6 @@ a)
 
 #checking missings 
 sum(is.na(College))  #0 
-
 
 set.seed(1)
 
@@ -49,7 +48,8 @@ attach(College)
 #linear model
 lm.fit <- lm(Apps ~ ., data = College, subset=train)
 
-mean((Apps - predict(lm.fit, College))[test]^2) # 1266407 MSE
+MSE_ols <-mean((Apps - predict(lm.fit, College))[test]^2) # 1266407 MSE
+MSE_ols
 ```
 
 c)
@@ -69,7 +69,9 @@ cv.out <- cv.glmnet(x[train, ], y[train], alpha = 0)
 bestlam <- cv.out$lambda.min
 
 ridge.pred <- predict(ridge.mod, s = bestlam, newx = x[test, ])
-mean((ridge.pred - y.test)^2) # 1125215 MSE
+
+MSE_ridge <- mean((ridge.pred - y.test)^2) # 1125215 MSE
+MSE_ridge
 ```
 
 
@@ -83,18 +85,34 @@ cv.out <- cv.glmnet(x[train, ], y[train], alpha = 1)
 bestlam <- cv.out$lambda.min
 
 lasso.pred <- predict(lasso.mod, s = bestlam, newx = x[test, ])
-mean((lasso.pred - y.test)^2) #1260855 MSE
 
-#pending: el número de estimaciones de coeficiente distintas de cero
+MSE_lasso <- mean((lasso.pred - y.test)^2) #1260855 MSE
+MSE_lasso
 ```
+
+
+```{r}
+
+#el número de estimaciones de coeficiente distintas de cero
+
+# Train the data using different lambdas values
+out=glmnet( x , y , alpha=1, lambda=grid, thresh = 1e-12 ) 
+
+# Get coefficients 
+lasso.coef = predict( lasso.mod  , type="coefficients" , s=bestlam )[1:18,]
+
+# Get coefficients  != 0 
+lasso.coef[lasso.coef!=0]
+```
+
 
 e)
 
+
 ```{r}
-#pending
 
+data.frame(MSE_ols, MSE_ridge, MSE_lasso)
 ```
-
 
 
 5) 
@@ -106,6 +124,10 @@ a)
 attach(Boston)
 
 sum(is.na(Boston))
+
+set.seed(1)
+
+
 ```
 
 
@@ -123,28 +145,30 @@ train <- sample(1:nrow(x_lasso), nrow(x_lasso)/2)
 test <- (-train)
 y.test <- y_lasso[test]
 
-
-library(glmnet)
-
-#fit the model and plot
-par(mfrow=c(1,1))
+#fit the model 
 lasso.mod <- glmnet(x_lasso[train, ], y_lasso[train], alpha = 1, lambda = grid)
-plot(lasso.mod)
 
 #cross-validation to compute estimated test error
 cv.out <- cv.glmnet(x_lasso[train, ], y_lasso[train], alpha = 1)
-plot(cv.out)
+
 bestlam <- cv.out$lambda.min
+
 lasso.pred <- predict(lasso.mod, s = bestlam, newx = x_lasso[test, ])
-mean((lasso.pred - y.test)^2) #=26.3345
 
-#three of the 10 coefficients are zero
+mean((lasso.pred - y.test)^2) #=41.0081
+
+
 out <- glmnet(x_lasso, y_lasso, alpha = 1, lambda = grid)
+
 lasso.coef <- predict(out, type="coefficients", s = bestlam)[1:13,]
-lasso.coef #non-zero variables: zn, indus, chas, nox, rm, dis, rad, ptratio, lstat, medv
+lasso.coef #non-zero variables: zn, indus, chas, nox, rm, dis, rad, tax, ptratio, lstat, medv
+
+           #zero variable: age
+
+```
 
 
-
+```{r}
 #ridge regression
 
 #put data in correct format
@@ -156,32 +180,26 @@ train <- sample(1:nrow(x_ridge), nrow(x_ridge)/2)
 test <- (-train)
 y.test <- y_ridge[test]
 
-#fit the model and plot
-par(mfrow=c(1,1))
+#fit the model 
 ridge.mod <- glmnet(x_ridge[train, ], y_ridge[train], alpha = 0, lambda = grid)
-plot(ridge.mod)
 
 #cross-validation to compute estimated test error
 cv.out <- cv.glmnet(x_ridge[train, ], y_ridge[train], alpha = 0)
-plot(cv.out)
+
 bestlam <- cv.out$lambda.min
+
 ridge.pred <- predict(ridge.mod, s = bestlam, newx = x_ridge[test, ])
-mean((ridge.pred - y.test)^2) #=32.56685 (worse than lasso)
+mean((ridge.pred - y.test)^2) #=54.77138 (worse than lasso)
 
 out <- glmnet(x_ridge, y_ridge, alpha = 0, lambda = grid)
 ridge.coef <- predict(out, type="coefficients", s = bestlam)[1:13,]
 ridge.coef 
-
-
 ```
 
 
+b) 
 
-b)
-
-```{r}
-#pending
-```
+El mejor modelo es lasso, ya que, a diferencia de ridge, este tiene un error de predicción menor (41 vs 55). El modelo lasso propuesto no incluye a todas las variables. De hecho, solo excluye a 1 de estas, la cual es edad.
 
 
 
