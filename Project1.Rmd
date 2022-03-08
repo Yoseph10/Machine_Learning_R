@@ -142,12 +142,12 @@ Luego de obtener el score para cada modelo, se toma el promedio de los resultado
  Una ventaja contra LOOCV es por temas computaciones, debido a que normalmente k-fold usualmente requiere menos grupos, LOOCV requiere k = n, donde n es el número de observaciones en el dataset. Dado al número de modelos a ajustar, el estimado del score de accuracy llega a ser más insesgado que el obtenido por k-folds, sin embargo, los resultados del score de cada modelo obtenido por LOOCV son altamente correlacionados, ya que usan practicamente los mismos datos (n-1 observaciones del dataset), esto termina aumentando la variabilidad del score contra la variabilidad que se obtiene con k-folds, lo que finalmente hace el resultado del score de k-folds mas certero.
 
 
-### Lasso and Ridge
+### Lasso y Ridge
 
 
 4) Predecir el número de solicitudes recibidas usando las variables en el conjunto de datos de College
 
-a)
+a) Divida el conjunto de datos en un conjunto de entrenamiento (70 %) y un conjunto de prueba (30 %)
 
 ```{r}
 #View(College)
@@ -166,7 +166,7 @@ y.test <- College$Apps[test]
 
 ```
 
-b)
+b) Ajuste un modelo lineal usando OLS en el conjunto de entrenamiento, y reportar el MSE del conjunto de prueba
 
 ```{r}
 attach(College)
@@ -178,7 +178,7 @@ MSE_ols <-mean((Apps - predict(lm.fit, College))[test]^2) # 1266407 MSE
 MSE_ols
 ```
 
-c)
+c) Ajuste un modelo Ridge en el conjunto de entrenamiento, con λ elegido por cross validation. Reporte el MSE del conjunto de prueba.
 
 ```{r}
 #ridge regression
@@ -201,7 +201,8 @@ MSE_ridge
 ```
 
 
-d)
+d) Ajuste un modelo Lasso en el conjunto de entrenamiento, con λ elegido por cross validation. Reporte el MSE del conjunto prueba, junto con el número de estimaciones de coeficiente distintas de cero.
+
 
 ```{r}
 #lasso regression
@@ -232,7 +233,7 @@ lasso.coef[lasso.coef!=0]
 ```
 
 
-e)
+e) Muestre un dataframe que resuma los resultado
 
 
 ```{r}
@@ -241,9 +242,9 @@ data.frame(MSE_ols, MSE_ridge, MSE_lasso)
 ```
 
 
-5) 
+5) Ahora intentaremos predecir la tasa de criminalidad per c´apita en los datos de Boston, del ISLR2 library.
 
-a)
+a) Proponga un modelo (o conjunto de modelos) que performen bien en este conjunto de datos y justifique su respuesta. Asegúrese de que estos modelos evaluen el rendimiento del modelo utilizando cross validation, en lugar de utilizar el error de entrenamiento.
 
 ```{r}
 #predict per capita crime rate
@@ -323,7 +324,7 @@ ridge.coef
 ```
 
 
-b) 
+b) ¿El modelo elegido involucra todas las variables disponibles? Justifique.
 
 El mejor modelo es lasso, ya que, a diferencia de ridge, este tiene un error de predicción menor (41 vs 55). El modelo lasso propuesto no incluye a todas las variables. De hecho, solo excluye a 1 de estas, la cual es edad.
 
