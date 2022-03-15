@@ -60,6 +60,17 @@ mean(r) #0.45
 
 
 **3)   **
+Para el caso de los árboles de decisión tenemos dos posibilidades, los de clasificación y los de regresión. En el caso de clasificación usamos el índice de gini o el de entropía como criterio de decisión para las particiones óptimas que se harán en el árbol.<br/>
+En el caso de los arboles de regresión, que es en el cual nos concentraremos, se usa mínimos cuadrados. Buscamos las particiones que reduzcan la suma de cuadrados de los residuos, o en inglés _Residual Sum Square (RSS)_, entre la observación y la media de cada nodo encontrado. 
+Dado el número de variables que normalmente se usan para este algoritmo, es casi imposible tomar en cuenta todas las particiones que se pueden armar, por eso se hace uso de un método de partición recursivo, denominado en inglés como _recursive binary splitting_. <br/>
+Lo que hace este método es comenzar desde el tope del árbol y selecciona la variable que dividirá a la base en dos grupos, la variable seleccionada será aquella que reduzca el _RSS_; Luego de encontrar la variable ideal y tener dos niveles nuevos, pasa a abrir estos dos nodos hallados y volver a dividirlos en dos a cada uno, hallando una nueva variable que siga minimizando el _RSS_. Lo importante de este método es que es recursivo ya que va a intentar todas las variables posibles en el *mismo* nivel, es decir, no pasará a la siguiente apertura de los nodos si es que no está seguro de haber encontrado a variable adecuada para la partición. <br/>
+Este proceso se repetirá hasta que quede un número mínimo de observaciones dentro de los nodos finales. <br/>
+Al tener el árbol final tenemos que tomar en cuenta que se puede presentar el problema de sobreajuste. Dada a la cantidad de variables y sub conjuntos de árboles que se pueden obtener dentro del árbol obtenido por el método de _recursive binary splitting_, es muy costoso hacer validación cruzada, es por eso que el paso final es hacer un podado del árbol, denominado en inglés como _pruning_, que introduce un parámetro $\alpha$ que permite que se encuentre los mejores subsets de árboles que obtienen el mejor ajuste de la data de entrenamiento con la menor cantidad de niveles posibles. Para hallar esto, se busca reducir la ecuación de:
+
+$$\sum_{m=i}^{|T|}\sum_{i:x_i \in R_m} (y_i - \hat{y}_{R_m})^2 + \alpha|T|$$
+
+En este caso, $|T|$ es el número de nodos terminales del arbol $T$, considerando que si $\alpha$ = 0 tendríamos el árbol obtenido originalmente, a medida que aumente $\alpha$ el árbol se "podará" más. El $R_m$ es la partición correspondiente al nodo terminal $m$ y el $\hat{y}_{R_m}$ es la media de las observaciones del set de entrenamiento que se encuentran en la partición $R_m$.<br/>
+Para obtener el $\alpha$ ideal, haremos una validación de k-fólios y al obtener este, volvemos al dataset completo para obtener el árbol podado correspondiente a este $\alpha$ ideal. 
 
 
 **4)   **
