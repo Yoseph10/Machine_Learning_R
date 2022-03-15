@@ -66,3 +66,47 @@ mean(r) #0.45
 
 
 **5)   **
+
+```{r}
+
+library(MASS)
+library(randomForest)
+
+set.seed(1)
+
+#empezamos a crear train y tests simples
+
+n <- nrow(Boston)
+train.set <- sample(1:n,n/2)
+
+Boston.train <- Boston[train.set, -14]
+Boston.test <- Boston[-train.set, -14]
+
+Y.train <- Boston[train.set, 14]
+Y.test <- Boston[-train.set, 14]
+
+#Creamos los distintos random forest con distintos mtry
+
+rf.a <- randomForest(Boston.train , Y.train, Boston.test, Y.test, mtry = ncol(Boston.train), ntree = 5000)
+rf.b <- randomForest(Boston.train , Y.train, Boston.test, Y.test, mtry = ncol(Boston.train) / 2, ntree = 5000)
+rf.c <- randomForest(Boston.train , Y.train, Boston.test, Y.test, mtry = sqrt(ncol(Boston.train)), ntree = 5000)
+
+#Gráfico que muestra los errores de prueba
+
+library(ggplot2)
+ggplot() + 
+  geom_line(aes(x = c(1:5000), y = rf.a$test$mse, color = "M = P")) +
+  geom_line(aes(x = c(1:5000), y = rf.b$test$mse, color = "M = P/2")) +
+  geom_line(aes(x = c(1:5000), y = rf.c$test$mse, color = "M = Sqrt(P)")) +
+  theme_classic() + 
+  xlab("Number of Trees") + ylab("Test Classification Error") + scale_colour_discrete(name="Form")
+
+rf.a$test$mse[5000]
+
+rf.b$test$mse[5000]
+
+rf.c$test$mse[5000]
+
+
+```
+
