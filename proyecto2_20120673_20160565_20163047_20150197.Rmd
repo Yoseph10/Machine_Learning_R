@@ -27,6 +27,40 @@ library(boot)
 
 **1)   **
 
+1. Considere el índice de Gini, el error de clasificación y la entropía en un árbol de clasificación con
+dos clases. Cree una sola gráfica que muestre cada una de estas cantidades como una función de
+pˆm1. El eje x debe mostrar pˆm1, con un rango de 0 a 1, y el eje y debe mostrar el valor del índice
+de Gini, el error de clasificación y la entropía.
+
+* *Índice de Gini*
+
+$$G=\sum_{k=1}^K\hat p_{mk}(1 - \hat p_{mk})$$
+
+* *Entropía*
+
+$$D=-\sum_{k=1}^K\hat p_{mk}\text{log} \hat p_{mk}$$
+
+```{r}
+p = seq(0, 1, 0.01)
+
+indice_gini = 2 * p * (1 - p)
+
+error_clasificacion = 1 - pmax(p, 1 - p)
+
+entropia = - (p * log(p) + (1 - p) * log(1 - p))
+```
+
+```{r}
+matplot(p, 
+        cbind(indice_gini, error_clasificacion, entropia), 
+        pch = c(1,2,3),
+        col = c("darkblue", "brown", "darkolivegreen4"),
+        ylab = "Gini index, class. error, entropy",
+        type = 'b')
+legend('bottom', inset=.01, legend = c('Índice de Gini', 'Error de clasificación', 'Entropía'), 
+       col = c("darkblue", "brown", "darkolivegreen4" ), 
+       pch=c(1,2,3))
+```
 
 **2)   **
 
