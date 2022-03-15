@@ -208,16 +208,16 @@ text(tree.Carseats , pretty = 0)
 ```
 
 Respuesta: 
-En este caso, solo se emplearon 6 variables para construir el arbol. Estas variables son high, la calidad de la ubicación de las estanterías (Shelveloc), el precio cobrado por el competidor en cada ubicación (Comprice), la población regional (Population), el precio de los asientos en cada lugar (Price) y la edad de la población (Age) 
+En este caso, solo se emplearon 6 variables para construir el arbol. Estas variables son la calidad de la ubicación de las estanterías (Shelveloc),el precio de los asientos en cada lugar (Price), la edad de la población (Age) , el presupuesto de publicidad local (Advertising), el precio cobrado por el competidor en cada ubicación (Comprice) y la variable US que indica si la tienda se ubica en USA o no.
 
 ```{r}
 used_vars <- as.character(tree.Carseats.sum$used)
 used_vars
 ```
 
-Además,se tienen 11 nodos terminales en el árbol. 
+Además,se tienen 18 nodos terminales en el árbol. 
 
-En lo que respecta a la evaluación del modelo, este presenta un Residual mean deviance de: 2.736873
+En lo que respecta a la evaluación del modelo, este presenta un Residual mean deviance de: 4.922039
 
 ```{r, INCLUDE = FALSE}
 Carseats.test = predict( tree.Carseats, newdata=Carseats[test,] )
@@ -230,20 +230,20 @@ c) Utilice la validacion cruzada para determinar el nivel optimo de complejidad 
 
 ```{r}
 cv.Carseats <- cv.tree(tree.Carseats)
-plot(cv.Carseats$size, cv.Carseats$dev, type = "b", xlim = c(2, 12))
+plot(cv.Carseats$size, cv.Carseats$dev, type = "b", xlim = c(4, 18))
 ```
 Seleccionamos el mejor nivel de complejidad del arbol. Ahora empleamos ese nivel de nodos para el árbol:  
 
 ```{r}
-prune.Carseats <- prune.tree(tree.Carseats , best = 3)
+prune.Carseats <- prune.tree(tree.Carseats , best = 18)
 plot(prune.Carseats)
 text(prune.Carseats , pretty = 0)
 ```
 
 Respuesta: 
-El tamaño óptimo será de 3 nodos terminales 
+El tamaño óptimo será de 18 nodos terminales 
 
-Al probar el modelo en la data de prueba, se observa que el MSE asociado al árbol de decisión es:   2.736873
+Al probar el modelo en la data de prueba, se observa que el MSE asociado al árbol de decisión se mantienen en: 4.922039
 
 ```{r}
 yhat <- predict(tree.Carseats , newdata = Carseats[-train , ])
@@ -263,7 +263,7 @@ dim(Carseats)
 #install.packages( "randomForest" )
 set.seed (1)
 library(randomForest)
-bag.Carseats <- randomForest(Sales ∼ ., data = Carseats, subset = train , mtry = 12, importance = TRUE)
+bag.Carseats <- randomForest(Sales ∼ ., data = Carseats, subset = train , mtry = 11, importance = TRUE)
 summary(bag.Carseats)
 ```
 
@@ -288,9 +288,9 @@ print( importance.bag[ order( importance.bag[,1] ), ] )
 
 
 Respuesta: 
-Se observa que el MSE asociado a este arbol es de 2.162261
+Se observa que el MSE asociado a este arbol es de 2.605253
 
-Además, se identifica que las variables más importantes del modelo considerando  el aumento en el %IncMSE, son: High, la calidad de la ubicación de la estantería (Shelveloc), el precio de las sillas (price) y el precio del competidor en la ubicación (CompPrice). Es decir, que cuando se excluyen estas variables del modelo, iniciando por la calidad de la ubicación de las estanterías (ShelveLoc), se genera un aumento significativo del MSE. Esto se observa en la siguiente tabla:  
+Además, se identifica que las variables más importantes del modelo considerando  el aumento en el %IncMSE, son: el precio de las sillas (price), la calidad de la ubicación de la estantería (Shelveloc) y el precio del competidor en la ubicación (CompPrice). Es decir, que cuando se excluyen estas variables del modelo, iniciando por la calidad de la ubicación de las estanterías (ShelveLoc), se genera un aumento significativo del MSE. Esto se observa en la siguiente tabla:  
 
 ```{r}
 importance.bag
@@ -299,16 +299,16 @@ importance.bag
 
 e) Utilice Random forest para analizar estos datos. ¿Que valor de MSE obtienes para el conjunto de prueba? Use la funcion importance() para determinar que variables son las mas importantes.Describa el efecto de m, el numero de variables consideradas en cada division, sobre la tasa de error obtenida.
 
-Sabemos que por default randomForest() emplea p/3 variables. En este ejercicio se emplearán mtry = 4, donde m= √p. 
+Sabemos que por default randomForest() emplea p/3 variables. En este ejercicio se emplearán mtry = 3, donde m= √p. 
 
 ```{r}
 set.seed (1)
 rf.Carseats <- randomForest(Sales ∼ ., data = Carseats ,
-                          subset = train , mtry = 4, importance = TRUE)
+                          subset = train , mtry = 3, importance = TRUE)
 yhat.rf <- predict(rf.Carseats, newdata = Carseats[-train , ])
 mean (( yhat.rf - Carseats.test)^2)
 ```
-Observamos que con m = 4, tenemos un Test MSE  de 2.12137
+Observamos que con m = 3, tenemos un Test MSE  de 2.960559
 
 Vemos la importancia de las variables: 
 
@@ -317,14 +317,17 @@ importance.ran = importance(rf.Carseats)
 importance.ran
 ```
 
-A su vez, al medir la importancia de las variables mediente el aumento del %IncMSE, resaltan: High, Price, Shelveloc, CompPrice. Es decir, al quitar a estas variables, el MSE del modelo aumenta.  En el caso de High, el MSE aumenta en un 64.16%.  Esto se observa en el siguiente gráfico: 
+A su vez, al medir la importancia de las variables mediente el aumento del %IncMSE, resaltan: Price, Shelveloc, CompPrice. Es decir, al quitar a estas variables, el MSE del modelo aumenta.  En el caso de la variable Price, el MSE aumenta en un 34.97%.  Esto se observa en el siguiente gráfico: 
 
 ```{r}
 varImpPlot(rf.Carseats)
 ```
-Aumentamos el número de variables para identificar su efecto en la tasa de error obtenida: 
+A su vez, para medir el efecto de m, el numero de variables consideradas en cada division, sobre la tasa de error obtenida, se plantea: 
 
-Primero trabajamos con 6 variables: 
+Aumentar el número de variables para identificar su efecto en la tasa de error obtenida: 
+
+   1.  Primero trabajamos con 6 variables: 
+
 ```{r}
 set.seed (1)
 rf.Carseats <- randomForest(Sales ∼ ., data = Carseats ,
@@ -332,9 +335,9 @@ rf.Carseats <- randomForest(Sales ∼ ., data = Carseats ,
 yhat.rf <- predict(rf.Carseats, newdata = Carseats[-train , ])
 mean (( yhat.rf - Carseats.test)^2)
 ```
-MSE:  Vemos que conforme aumenta el tamaño de m, también lo hace el MSE. En este caso sube a 2.176362
+MSE:  Vemos que conforme aumenta el tamaño de m, reduce el MSE. En este caso es de 2.667767
 
-Ahora aumentamos el tamaño de m a 10.  
+  2. Ahora aumentamos el tamaño de m a 10.  
 
 ```{r}
 set.seed (1)
@@ -342,15 +345,13 @@ rf.Carseats10 <- randomForest(Sales ∼., data = Carseats , subset = train , mtr
 yhat.rf10 <- predict(rf.Carseats10, newdata = Carseats[-train , ])
 mean (( yhat.rf10 - Carseats.test)^2)
 ```
-MSE: Vemos que el MSE se reduce a 2.152985
+MSE: Vemos que el MSE se reduce a 2.605253
 
 
 Respuesta: 
-El MSE en el grupo de testeo es de 2.667767. Vemos una reducción en el MSE respecto a Bagging, cuando el modelo incluye un m = 10 . Pero el m= 4 presenta el mejor MSE al ser de 2.12137. 
+El MSE en el grupo de testeo del modelo con mtry = 3, es de 2.960559. Vemos una reducción en el MSE respecto a Bagging, cuando el modelo incluye un m = 6 . Pero el m= 10 presenta el mejor MSE al ser de 2.605 
 
-
-
-De igual forma, como se observó en el ejercicio, al aumentar el tamaño de m de 6 a 10 variables en el modelo, el MSE varia, subiendo cuando el m= 6 y bajando con m= 10. 
+De igual forma, como se observó en el ejercicio, al aumentar el tamaño de m de 3 a 10 variables en el modelo, el MSE se va reduciendo progresivamente. 
 
 f) Analice la data utilizando boosting:
 
@@ -370,6 +371,6 @@ yhat.boost <- predict(boost.Carseats ,
                       newdata = Carseats[-train , ], n.trees = 5000)
 mean (( yhat.boost - Carseats.test)^2)
 ```
-Respuesta: Al emplear boosting, que posee un proceso de aprendizaje continuo con árboles ligados, se observa que el MSE se reduce a 1.740801. Esto implica una mejora en la capacidad predictiva del modelo que emplea Boosting por sobre Random Forests y Bagging.
+Respuesta: Al emplear boosting, que posee un proceso de aprendizaje continuo con árboles ligados, se observa que el MSE se reduce a 1.806206. Esto implica una mejora en la capacidad predictiva del modelo que emplea Boosting por sobre Random Forests y Bagging.
 
-Asimismo, se observa que las variables, High, Price (precio) y Sherveloc (la calidad de la ubicación de las estanterías) son las más importantes.
+Asimismo, se observa que las variables Price (precio) y Sherveloc (la calidad de la ubicación de las estanterías) son las más importantes del modelo. 
