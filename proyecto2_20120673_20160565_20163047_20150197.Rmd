@@ -1,0 +1,40 @@
+---
+title: "Proyecto 2"
+#author: ""
+#date: "3/15/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Integrantes:**
+
+Luciana Figueroa Valdivia (20120673),
+Chiara Zamora Mendoza (20160565),
+Yoseph Ayala Valencia (20163047),
+Claudia Villena Tagle (20150197)
+
+
+```{r}
+#loading libraries
+library(ISLR2)
+library(glmnet)
+library(MASS)
+library(boot)
+```
+
+**1)   **
+
+
+**2)   **
+
+
+**3)   **
+
+
+**4)   **
+
+
+**5)   **
