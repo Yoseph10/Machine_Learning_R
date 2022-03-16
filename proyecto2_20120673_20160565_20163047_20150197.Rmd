@@ -23,6 +23,9 @@ library(ISLR2)
 library(glmnet)
 library(MASS)
 library(boot)
+library(tidyverse)
+library(tibble)
+library(ggplot2)
 ```
 
 **1)   **
@@ -109,49 +112,115 @@ Para obtener el $\alpha$ ideal, haremos una validación de k-fólios y al obtene
 
 **4)   **
 
+Si bien en las indicaciones se nos pide que mtry estén entre el rango de 5 a 40 con saltos de 5, solo hemos considerado los casos cuando mtry es 5 y 10. Cuando mtry es mayor o igual 15, R nos indica lo siguiente: "invalid mtry: reset to within valid range". Esto quiere decir que, cuando tomamos estos valores, R nos indica que no son válidos. Por tanto, lo que hace el software es colocar a mtry con el valor por defecto. Dado que no es de interés del ejercicios utilizar el valor de mtry por defecto, solo estamos considerando los valores válidos para mtry: 5 y 10.
 
 ```{r}
 
-library(MASS)
 library(randomForest)
 
-set.seed(1)
+## training and testing data
+set.seed (1)
 
-#empezamos a crear train y tests simples
+train <- sample (1: nrow(Boston), nrow(Boston) / 2)
 
-n <- nrow(Boston)
-train.set <- sample(1:n,n/2)
+boston.test <- Boston[-train, "medv"]
 
-Boston.train <- Boston[train.set, -14]
-Boston.test <- Boston[-train.set, -14]
+## lists
 
-Y.train <- Boston[train.set, 14]
-Y.test <- Boston[-train.set, 14]
+#usamos solo los valores de 5 y 10 para mtry. Esto debido a que, cuando se usan valores desde 15 en adelante, R bota el siguiente error: "invalid mtry: reset to within valid range"
 
-#Creamos los distintos random forest con distintos mtry
+mtry_list <- as.list( seq(5, 10, by = 5) ) 
 
-rf.a <- randomForest(Boston.train , Y.train, Boston.test, Y.test, mtry = ncol(Boston.train), ntree = 5000)
-rf.b <- randomForest(Boston.train , Y.train, Boston.test, Y.test, mtry = ncol(Boston.train) / 2, ntree = 5000)
-rf.c <- randomForest(Boston.train , Y.train, Boston.test, Y.test, mtry = sqrt(ncol(Boston.train)), ntree = 5000)
+ntree_list <- as.list( seq(200, 800, by = 100) )
 
-#Gráfico que muestra los errores de prueba
+df = expand.grid(mtry_list, ntree_list)
+        
+## number of possible combinations
+n_combinations <- nrow( expand.grid(mtry_list, ntree_list) )
 
-library(ggplot2)
-ggplot() + 
-  geom_line(aes(x = c(1:5000), y = rf.a$test$mse, color = "M = P")) +
-  geom_line(aes(x = c(1:5000), y = rf.b$test$mse, color = "M = P/2")) +
-  geom_line(aes(x = c(1:5000), y = rf.c$test$mse, color = "M = Sqrt(P)")) +
-  theme_classic() + 
-  xlab("Number of Trees") + ylab("Test Classification Error") + scale_colour_discrete(name="Form")
+## MSE vector
+MSE_vector <- rep(0, n_combinations)
 
-rf.a$test$mse[5000]
 
-rf.b$test$mse[5000]
+## Loop que combina mtry = (5,10) con ntree = (200,300,400,500,600,700,800)
 
-rf.c$test$mse[5000]
+for(i in seq_len(nrow(df))) {
 
+        
+  bag.boston <- randomForest(medv ∼ ., data = Boston ,
+                           subset = train , 
+                           mtry = unlist( df[i,][1]  ),
+                           ntree = unlist( df[i,][2]  ))
+  
+  
+  yhat.bag <- predict(bag.boston , newdata = Boston[-train , ])
+  
+  MSE_vector[i] <- mean (( yhat.bag - boston.test)^2) 
+    
+    
+}
+
+MSE_vector
 
 ```
+
+
+
+```{r}
+
+mtry_mtree <- c("(5,200)","(5,300)","(5,400)","(5,500)","(5,600)","(5,700)","(5,800)",
+            "(10,200)","(10,300)","(10,400)","(10,500)","(10,600)","(10,700)","(10,800)")
+
+error_prueba <- MSE_vector
+
+MSE_df = data.frame(mtry_mtree, error_prueba )
+
+MSE_df = rownames_to_column(MSE_df)
+
+
+ggplot(MSE_df, 
+       aes(x=mtry_mtree, y=error_prueba)) +
+  geom_bar(stat="identity") +
+  theme(axis.text.x=element_text(angle=-90, vjust=0.5, hjust=0))
+
+```
+
+Si ejecuta el siguiente code chunck, podrá visualizar el error/warning que ocurre cuando mtry está entre el rango de 5 a 40 con saltos de 5
+
+
+```{r}
+
+mtry_list <- as.list( seq(5,40, by = 5) ) 
+
+ntree_list <- as.list( seq(200, 800, by = 100) )
+
+df = expand.grid(mtry_list, ntree_list)
+        
+## number of possible combinations
+n_combinations <- nrow( expand.grid(mtry_list, ntree_list) )
+
+## MSE vector
+MSE_vector <- rep(0, n_combinations)
+
+
+for(i in seq_len(nrow(df))) {
+
+        
+  bag.boston <- randomForest(medv ∼ ., data = Boston ,
+                           subset = train , 
+                           mtry = unlist( df[i,][1]  ),
+                           ntree = unlist( df[i,][2]  ))
+  
+  
+  yhat.bag <- predict(bag.boston , newdata = Boston[-train , ])
+  
+  MSE_vector[i] <- mean (( yhat.bag - boston.test)^2) 
+    
+    
+}
+
+```
+
 
 **5) Objetivo: buscaremos predecir las ventas de asientos de automóvil, de manera cuantitativa**
 
@@ -374,3 +443,4 @@ mean (( yhat.boost - Carseats.test)^2)
 Respuesta: Al emplear boosting, que posee un proceso de aprendizaje continuo con árboles ligados, se observa que el MSE se reduce a 1.806206. Esto implica una mejora en la capacidad predictiva del modelo que emplea Boosting por sobre Random Forests y Bagging.
 
 Asimismo, se observa que las variables Price (precio) y Sherveloc (la calidad de la ubicación de las estanterías) son las más importantes del modelo. 
+
